@@ -3,8 +3,49 @@ import tkinter as tk
 # Create Window
 window = tk.Tk()
 
-# Initialize widgets
+# Define functions
+def on_click_button(event):
+    calculation_field["text"] = calculator.process_input(input=event.widget["text"], text=calculation_field["text"])
 
+class Calculator():
+    def __init__(self, state="i1"):
+
+        self.state = state
+        self.valid_states = (
+            "i1",
+            "o1",
+            "i2",
+            "cc"
+        )
+        self.valid_operators = (
+            "+",
+            "-",
+            "*",
+            "/"
+        )
+
+    def process_input(self, input, text):
+        print(self.state)
+        if input == "C":
+            return ""
+        elif self.state == "i1" and input.isdigit():
+            self.state = "o1"
+            return "".join((text, input))
+        elif self.state == "o1" and input.isdigit():
+            return "".join((text, input))
+        elif self.state == "o1" and input in self.valid_operators:
+            self.state = "i2"
+            return "".join((text, input))
+        elif self.state == "i2" and input.isdigit():
+            self.state = "cc"
+            return "".join((text, input))
+        elif self.state == "cc" and input.isdigit():
+            return "".join((text, input))
+        elif self.state == "cc" and input == "=":
+            return eval(text)
+
+
+# Initialize widgets
 button_texts = {
     (1, 0): "7",
     (1, 1): "8",
@@ -24,10 +65,13 @@ button_texts = {
     (4, 3): "-"
 
 }
-entry_frame = tk.Frame(relief=tk.RAISED, borderwidth=1)
-entry_frame.grid(row=0, column=0, columnspan=4)
-calculation_entry = tk.Entry(master=entry_frame, width=25)
-calculation_entry.grid(row=0, column=0)
+
+calculator = Calculator()
+
+field_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=1)
+field_frame.grid(row=0, column=0, columnspan=4)
+calculation_field = tk.Label(master=field_frame, text="", width=25)
+calculation_field.grid(row=0, column=0)
 
 for c in range(4):
 
@@ -39,8 +83,9 @@ for c in range(4):
         frame.grid(row=r+1, column=c)
         button = tk.Button(
             master=frame,
-            text=button_texts[(r+1, c)]
+            text=button_texts[(r+1, c)],
         )
+        button.bind("<Button-1>", on_click_button)
         button.pack()
 
 # Run window
