@@ -5,12 +5,14 @@ window = tk.Tk()
 
 # Define functions
 def on_click_button(event):
-    calculation_field["text"] = calculator.process_input(input=event.widget["text"], text=calculation_field["text"])
+    calculation_field["text"] = calculator.process_input(input=event.widget["text"])
 
 class Calculator():
-    def __init__(self, state="i1"):
+
+    def __init__(self, state="i1", display=""):
 
         self.state = state
+        self.display = display
         self.valid_states = (
             "i1",
             "o1",
@@ -24,25 +26,31 @@ class Calculator():
             "/"
         )
 
-    def process_input(self, input, text):
-        print(self.state)
+    def process_input(self, input):
+
         if input == "C":
-            return ""
+            self.display = ""
+            return self.display
         elif self.state == "i1" and input.isdigit():
             self.state = "o1"
-            return "".join((text, input))
+            self.display = "".join((self.display, input))
+            return self.display
         elif self.state == "o1" and input.isdigit():
-            return "".join((text, input))
+            self.display = "".join((self.display, input))
+            return self.display
         elif self.state == "o1" and input in self.valid_operators:
             self.state = "i2"
-            return "".join((text, input))
+            self.display = "".join((self.display, input))
+            return self.display
         elif self.state == "i2" and input.isdigit():
             self.state = "cc"
-            return "".join((text, input))
+            self.display = "".join((self.display, input))
+            return self.display
         elif self.state == "cc" and input.isdigit():
-            return "".join((text, input))
+            self.display = "".join((self.display, input))
+            return self.display
         elif self.state == "cc" and input == "=":
-            return eval(text)
+            return eval(self.display)
 
 
 # Initialize widgets
@@ -70,7 +78,7 @@ calculator = Calculator()
 
 field_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=1)
 field_frame.grid(row=0, column=0, columnspan=4)
-calculation_field = tk.Label(master=field_frame, text="", width=25)
+calculation_field = tk.Label(master=field_frame, text=calculator.display, width=25)
 calculation_field.grid(row=0, column=0)
 
 for c in range(4):
