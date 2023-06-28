@@ -15,12 +15,14 @@ def on_resized_window(event):
 
 class Calculator():
 
-    # Main functinary class
+    # Main functionary class
 
     def __init__(self):
 
         # Equation processed
-        self.equation = [""]
+        self.equation = ""
+
+        self.operator = None
 
         # Valid digits that will be accepted
         self.valid_digits = (
@@ -49,25 +51,65 @@ class Calculator():
     @property
     def display(self):
         # Returns equation as str
-        return "".join(self.equation)
+        return self.equation
+
+    def _calculate(self, result=""):
+
+        # Calculate first part of equation
+        if self.equation[1] == "+":
+            result += str(float(self.equation[0]) + float(self.equation[2]))
+        elif self.equation[1] == "-":
+            result += str(float(self.equation[0]) - float(self.equation[2]))
+        elif self.equation[1] == "*":
+            result += str(float(self.equation[0]) * float(self.equation[2]))
+        elif self.equation[1] == "/":
+            result += str(float(self.equation[0]) / float(self.equation[2]))
+
+        # Remove finished part of equation
+        for n in range(2):
+            self.equation.pop(1)
+        self.equation[0] = result
+
+        # If calculation is not finished, repeat
+        if len(self.equation) > 1:
+            self._calculate(result=result)
 
     def process_input(self, input):
 
         # Clear equation
         if input == "C":
-            self.equation = [""]
+            self.equation = ""
 
         # Calculate equation
         elif input == "=":
-            pass
+            self.equation = eval(self.equation)
+            #self._calculate()
 
+        elif input in self.valid_digits:
+            try:
+                eval(self.equation + input)
+            except SyntaxError:
+                pass
+            else:
+                if self.operator is None:
+                    self.equation += input
+                else:
+                    self.equation += self.operator
+                    self.equation += input
+                    self.operator = None
+
+        elif input in self.valid_operators:
+            self.operator = input
+
+        """
         # Insert digit
         elif input in self.valid_digits:
             # Check if equation is valid
             try:
                 float(self.equation[-1] + input)
             except ValueError:
-                pass
+                if self.equation[-1] in self.valid_operators:
+                    self.equation.append(input)
             else:
                 self.equation[-1] = self.equation[-1] + input
 
@@ -80,6 +122,7 @@ class Calculator():
         else:
             # Error if input is invalid
             raise ValueError("Invalid input:", input)
+        """
 
 
 # Initialize widgets
