@@ -6,7 +6,7 @@ window.title("Calculator")
 
 # Define event functions
 def on_click_button(event):
-    calculator.process_input(input=event.widget["text"])
+    calculator.process_button_press(button=event.widget["text"])
     equation_field["text"] = calculator.display
 
 def on_resized_window(event):
@@ -19,9 +19,13 @@ class Calculator():
 
     def __init__(self):
 
-        # Equation processed
+        # Equation processed f.x. "2+2", eval() will process
         self.equation = ""
 
+        # Text displayed
+        self.display = self.equation
+
+        # Operator buffer
         self.operator = None
 
         # Valid digits that will be accepted
@@ -48,81 +52,97 @@ class Calculator():
             "/"
         )
 
-    @property
-    def display(self):
-        # Returns equation as str
-        return self.equation
+        self.valid_bases = {
+            "Base 10": 10,
+            "Base 2": 2,
+            "Base 16": 16
+        }
 
-    def _calculate(self, result=""):
+    def _convert_to_base(self, number, base_to):
+        result = ""
+        number_int = int(number)
+        if base_to == 10:
+            # Standard is base 10
+            return number
+        elif base_to == 2:
+            # Number of digits necessary
+            number_of_digits = 4
+            while 2 ** number_of_digits <= number_int:
+                number_of_digits += 4
+            value = 0
+            for n in reversed(range(0, number_of_digits)):
+                if 2**n <= number_int-value:
+                    value += 2**n
+                    result += "1"
+                else:
+                    result += "0"
+            return result
 
-        # Calculate first part of equation
-        if self.equation[1] == "+":
-            result += str(float(self.equation[0]) + float(self.equation[2]))
-        elif self.equation[1] == "-":
-            result += str(float(self.equation[0]) - float(self.equation[2]))
-        elif self.equation[1] == "*":
-            result += str(float(self.equation[0]) * float(self.equation[2]))
-        elif self.equation[1] == "/":
-            result += str(float(self.equation[0]) / float(self.equation[2]))
+        # Conver to hex
+        elif base_to == 16:
+            number_of_hex_digits = 32
+            result_hex = ""
+            b10_to_b16 = {
+                0: "0", 1: "1", 2: "2", 3: "3",
+                4: "4", 5: "5", 6: "6", 7: "7",
+                8: "8", 9: "9", 10: "A", 11: "B",
+                12: "C", 13: "D", 14: "E", 15: "F"}
+            while 16 ** number_of_hex_digits <= number_int:
+                number_of_hex_digits += 32
+            for n in reversed(range(0, number_of_hex_digits)):
+                pos_value = 16**n
+                # Do we need this value?
+                if pos_value <= number_int:
+                    # 0-15 in this position
+                    hex_digit_value = number_int // pos_value
+                    # Subtract numeric value
+                    number_int -= pos_value * hex_digit_value
+                    # Add the hex digit to result
+                    result_hex += b10_to_b16[hex_digit_value]
+            return result_hex
+        else:
+            print("Invalid input for _convert()")
 
-        # Remove finished part of equation
-        for n in range(2):
-            self.equation.pop(1)
-        self.equation[0] = result
+    def process_button_press(self, button):
 
-        # If calculation is not finished, repeat
-        if len(self.equation) > 1:
-            self._calculate(result=result)
-
-    def process_input(self, input):
+        if button in self.valid_bases.keys():
+            try:
+                # Check if equation is convertable
+                int(self.equation)
+            except ValueError:
+                pass
+            else:
+                self.display = self._convert_to_base(
+                    number=self.equation,
+                    base_to=self.valid_bases[button]
+                )
 
         # Clear equation
-        if input == "C":
+        elif button == "C":
             self.equation = ""
+            self.display = self.equation
 
         # Calculate equation
-        elif input == "=":
+        elif button == "=":
             self.equation = eval(self.equation)
-            #self._calculate()
+            self.display = self.equation
 
-        elif input in self.valid_digits:
+        elif button in self.valid_digits:
             try:
-                eval(self.equation + input)
+                eval(self.equation + button)
             except SyntaxError:
                 pass
             else:
                 if self.operator is None:
-                    self.equation += input
+                    self.equation += button
                 else:
                     self.equation += self.operator
-                    self.equation += input
+                    self.equation += button
                     self.operator = None
+                self.display = self.equation
 
-        elif input in self.valid_operators:
-            self.operator = input
-
-        """
-        # Insert digit
-        elif input in self.valid_digits:
-            # Check if equation is valid
-            try:
-                float(self.equation[-1] + input)
-            except ValueError:
-                if self.equation[-1] in self.valid_operators:
-                    self.equation.append(input)
-            else:
-                self.equation[-1] = self.equation[-1] + input
-
-        # Insert operator
-        elif input in self.valid_operators:
-            if self.equation[-1][-1].isdigit():
-                self.equation.append(input)
-            else:
-                pass
-        else:
-            # Error if input is invalid
-            raise ValueError("Invalid input:", input)
-        """
+        elif button in self.valid_operators:
+            self.operator = button
 
 
 # Initialize widgets
@@ -131,23 +151,24 @@ button_texts = {
     (1, 1): "8",
     (1, 2): "9",
     (1, 3): "*",
-    (1, 4): "(",
+    (1, 4): "Base 10",
     (2, 0): "4",
     (2, 1): "5",
     (2, 2): "6",
     (2, 3): "/",
-    (2, 4): ")",
+    (2, 4): "Base 2",
     (3, 0): "1",
     (3, 1): "2",
     (3, 2): "3",
     (3, 3): "+",
-    (3, 4): "=",
-    (4, 0): "00",
+    (3, 4): "Base 16",
+    (4, 0): "=",
     (4, 1): "0",
     (4, 2): ".",
     (4, 3): "-",
     (4, 4): "C"
 }
+
 
 num_columns = 5
 num_rows = 4
