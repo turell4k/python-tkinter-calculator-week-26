@@ -1,13 +1,16 @@
 import tkinter as tk
+import re
 
 # Create Window
 window = tk.Tk()
 window.title("Calculator")
 
+
 # Define event functions
 def on_click_button(event):
     calculator.process_button_press(button=event.widget["text"])
     equation_field["text"] = calculator.display
+
 
 def on_resized_window(event):
     equation_field["width"] = int(window.winfo_width()/9)
@@ -20,14 +23,7 @@ class Calculator():
     def __init__(self):
 
         # Equation processed f.x. "2+2", eval() will process
-        self.equation = ""
-
-        # Main display
-        self._display = ""
-        # Base 2, 10 and 16 displays
-        self.display_b10 = ""
-        self.display_b2 = ""
-        self.display_b16 = ""
+        self.equation = [""]
 
         # Default is base 10
         self.base = 10
@@ -68,18 +64,27 @@ class Calculator():
 
     @property
     def display(self):
-        try:
-            # Check if equation is convertable
-            int(self.equation)
-        except ValueError:
-            return self.equation
+
+        if self.equation == [""]:
+            return ""
         else:
-            return self._convert_to_base(
-                number=self.equation,
-                base_to=self.base
-            )
+            result = ""
+
+            for e in self.equation:
+                if e in self.valid_operators:
+                    result += e
+                else:
+                    result += self._convert_to_base(
+                        number=e,
+                        base_to=self.base
+                    )
+
+
+            print(self.base, self.equation, result)
+            return result
 
     def _convert_to_base(self, number, base_to):
+        number = str(number)
         result = ""
         number_int = int(number)
         if base_to == 10:
@@ -126,30 +131,28 @@ class Calculator():
 
     def process_button_press(self, button):
 
-        print(self.base, self.equation)
-
         if button in self.valid_bases.keys():
                 self.base = self.valid_bases[button]
 
         # Clear equation
         elif button == "C":
-            self.equation = ""
+            self.equation = [""]
 
         # Calculate equation
         elif button == "=":
-            self.equation = eval(self.equation)
+            self.equation = [eval("".join(self.equation))]
 
         elif button in self.valid_digits:
             try:
-                eval(self.equation + button)
-            except SyntaxError:
-                pass
+                float(self.equation[-1] + button)
+            except IndexError:
+                self.equation.append(button)
             else:
                 if self.operator is None:
-                    self.equation += button
+                    self.equation[-1] += button
                 else:
-                    self.equation += self.operator
-                    self.equation += button
+                    self.equation.append(self.operator)
+                    self.equation.append(button)
                     self.operator = None
 
         elif button in self.valid_operators:
@@ -190,7 +193,7 @@ field_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=1)
 field_frame.grid(row=0, column=0, columnspan=num_columns)
 equation_field = tk.Label(
     master=field_frame,
-    text=calculator.display,
+    text="",
     width=33,
     fg="black",
     bg="white"
