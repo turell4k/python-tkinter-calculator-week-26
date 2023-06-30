@@ -1,3 +1,8 @@
+"""
+A simple calculator built with python and the tkinter module
+It supports base 10, 2 and 16, and I have built the converter myself
+"""
+
 import tkinter as tk
 
 # Create Window
