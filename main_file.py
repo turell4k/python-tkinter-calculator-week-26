@@ -1,5 +1,4 @@
 import tkinter as tk
-import re
 
 # Create Window
 window = tk.Tk()
@@ -9,7 +8,8 @@ window.title("Calculator")
 # Define event functions
 def on_click_button(event):
     calculator.process_button_press(button=event.widget["text"])
-    equation_field["text"] = calculator.display
+    equation_field["text"] = calculator.display_equation
+    base_field["text"] = calculator.display_base
 
 
 def on_resized_window(event):
@@ -23,7 +23,7 @@ class Calculator():
     def __init__(self):
 
         # Equation processed f.x. "2+2", eval() will process
-        self.equation = [""]
+        self.equation = []
 
         # Default is base 10
         self.base = 10
@@ -62,10 +62,17 @@ class Calculator():
             "Base 16": 16
         }
 
-    @property
-    def display(self):
+        self.b10_to_b16 = {
+            0: "0", 1: "1", 2: "2", 3: "3",
+            4: "4", 5: "5", 6: "6", 7: "7",
+            8: "8", 9: "9", 10: "A", 11: "B",
+            12: "C", 13: "D", 14: "E", 15: "F"
+        }
 
-        if self.equation == [""]:
+    @property
+    def display_equation(self):
+
+        if self.equation == []:
             return ""
         else:
             result = ""
@@ -82,6 +89,10 @@ class Calculator():
 
             print(self.base, self.equation, result)
             return result
+
+    @property
+    def display_base(self):
+        return "Base " + str(self.base)
 
     def _convert_to_base(self, number, base_to):
         number = str(number)
@@ -108,11 +119,6 @@ class Calculator():
         elif base_to == 16:
             number_of_hex_digits = 32
             result_hex = ""
-            b10_to_b16 = {
-                0: "0", 1: "1", 2: "2", 3: "3",
-                4: "4", 5: "5", 6: "6", 7: "7",
-                8: "8", 9: "9", 10: "A", 11: "B",
-                12: "C", 13: "D", 14: "E", 15: "F"}
             while 16 ** number_of_hex_digits <= number_int:
                 number_of_hex_digits += 32
             for n in reversed(range(0, number_of_hex_digits)):
@@ -124,7 +130,7 @@ class Calculator():
                     # Subtract numeric value
                     number_int -= pos_value * hex_digit_value
                     # Add the hex digit to result
-                    result_hex += b10_to_b16[hex_digit_value]
+                    result_hex += self.b10_to_b16[hex_digit_value]
             return result_hex
         else:
             print("Invalid input for _convert()")
@@ -132,11 +138,11 @@ class Calculator():
     def process_button_press(self, button):
 
         if button in self.valid_bases.keys():
-                self.base = self.valid_bases[button]
+            self.base = self.valid_bases[button]
 
         # Clear equation
         elif button == "C":
-            self.equation = [""]
+            self.equation = []
 
         # Calculate equation
         elif button == "=":
@@ -148,12 +154,14 @@ class Calculator():
             except IndexError:
                 self.equation.append(button)
             else:
-                if self.operator is None:
+                if self.operator is None and self.equation is not []:
                     self.equation[-1] += button
-                else:
+                elif self.operator is not None and self.equation is not []:
                     self.equation.append(self.operator)
                     self.equation.append(button)
                     self.operator = None
+                else:
+                    self.equation.append(button)
 
         elif button in self.valid_operators:
             self.operator = button
@@ -189,16 +197,28 @@ num_rows = 4
 
 calculator = Calculator()
 
-field_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=1)
-field_frame.grid(row=0, column=0, columnspan=num_columns)
+equation_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=2)
+equation_frame.grid(row=0, column=0, columnspan=num_columns-1)
+base_frame = tk.Frame(relief=tk.RAISED, borderwidth=2)
+base_frame.grid(row=0, column=num_columns-1)
+
 equation_field = tk.Label(
-    master=field_frame,
+    master=equation_frame,
     text="",
-    width=33,
+    width=1,
     fg="black",
     bg="white"
 )
 equation_field.grid(row=0, column=0)
+
+base_field = tk.Label(
+    master=base_frame,
+    text=calculator.display_base,
+    width=6,
+    fg="black",
+    bg="white"
+)
+base_field.grid(row=0, column=0)
 
 for c in range(num_columns):
     window.columnconfigure(c, weight=1, minsize=56)
@@ -218,7 +238,7 @@ for c in range(num_columns):
         button = tk.Button(
             master=frame,
             text=button_texts[(r+1, c)],
-            width=5,
+            width=6,
             height=3,
             fg="black",
             bg="white"
