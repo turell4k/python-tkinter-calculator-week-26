@@ -22,8 +22,15 @@ class Calculator():
         # Equation processed f.x. "2+2", eval() will process
         self.equation = ""
 
-        # Text displayed
-        self.display = self.equation
+        # Main display
+        self._display = ""
+        # Base 2, 10 and 16 displays
+        self.display_b10 = ""
+        self.display_b2 = ""
+        self.display_b16 = ""
+
+        # Default is base 10
+        self.base = 10
 
         # Operator buffer
         self.operator = None
@@ -52,11 +59,25 @@ class Calculator():
             "/"
         )
 
+        # Valid bases that can be converted to
         self.valid_bases = {
             "Base 10": 10,
             "Base 2": 2,
             "Base 16": 16
         }
+
+    @property
+    def display(self):
+        try:
+            # Check if equation is convertable
+            int(self.equation)
+        except ValueError:
+            return self.equation
+        else:
+            return self._convert_to_base(
+                number=self.equation,
+                base_to=self.base
+            )
 
     def _convert_to_base(self, number, base_to):
         result = ""
@@ -78,7 +99,7 @@ class Calculator():
                     result += "0"
             return result
 
-        # Conver to hex
+        # Convert to hex
         elif base_to == 16:
             number_of_hex_digits = 32
             result_hex = ""
@@ -105,27 +126,18 @@ class Calculator():
 
     def process_button_press(self, button):
 
+        print(self.base, self.equation)
+
         if button in self.valid_bases.keys():
-            try:
-                # Check if equation is convertable
-                int(self.equation)
-            except ValueError:
-                pass
-            else:
-                self.display = self._convert_to_base(
-                    number=self.equation,
-                    base_to=self.valid_bases[button]
-                )
+                self.base = self.valid_bases[button]
 
         # Clear equation
         elif button == "C":
             self.equation = ""
-            self.display = self.equation
 
         # Calculate equation
         elif button == "=":
             self.equation = eval(self.equation)
-            self.display = self.equation
 
         elif button in self.valid_digits:
             try:
@@ -139,7 +151,6 @@ class Calculator():
                     self.equation += self.operator
                     self.equation += button
                     self.operator = None
-                self.display = self.equation
 
         elif button in self.valid_operators:
             self.operator = button
