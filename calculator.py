@@ -96,7 +96,6 @@ class Calculator():
                         base_to=self.base
                     )
 
-            print(self.base, self.equation, result)
             return result
 
     @property
@@ -151,7 +150,7 @@ class Calculator():
         # React on button press event
 
         # Make sure eval() and _convert_to_base() can handle equation
-        if len(self.equation) > self.max_equation_len:
+        if len("".join(self.equation)) > self.max_equation_len:
             self.equation = []
             print("Error: Equation too long")
 
