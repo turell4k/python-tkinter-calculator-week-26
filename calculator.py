@@ -1,3 +1,8 @@
+"""
+A simple calculator built with python and the tkinter module
+It supports base 10, 2 and 16, and I have built the converter myself
+"""
+
 import tkinter as tk
 
 # Create Window
@@ -7,13 +12,15 @@ window.title("Calculator")
 
 # Define event functions
 def on_click_button(event):
+    # Tell calculator which button was pressed
     calculator.process_button_press(button=event.widget["text"])
-    equation_field["text"] = calculator.display_equation
-    base_field["text"] = calculator.display_base
+    equation_label["text"] = calculator.display_equation
+    base_label["text"] = calculator.display_base
 
 
 def on_resized_window(event):
-    equation_field["width"] = int(window.winfo_width()/9)
+    # Resize equation label to match window size
+    equation_label["width"] = int(window.winfo_width()/9)
 
 
 class Calculator():
@@ -24,6 +31,7 @@ class Calculator():
 
         # Equation processed f.x. "2+2", eval() will process
         self.equation = []
+        self.max_equation_len = 100
 
         # Default is base 10
         self.base = 10
@@ -55,13 +63,14 @@ class Calculator():
             "/"
         )
 
-        # Valid bases that can be converted to
+        # Bases that are supported
         self.valid_bases = {
             "Base 10": 10,
             "Base 2": 2,
             "Base 16": 16
         }
 
+        # Dictionary for converting base 10 numbers to base 16 digits
         self.b10_to_b16 = {
             0: "0", 1: "1", 2: "2", 3: "3",
             4: "4", 5: "5", 6: "6", 7: "7",
@@ -71,8 +80,9 @@ class Calculator():
 
     @property
     def display_equation(self):
+        # Displays equation in current base
 
-        if self.equation == []:
+        if self.equation is []:
             return ""
         else:
             result = ""
@@ -86,15 +96,17 @@ class Calculator():
                         base_to=self.base
                     )
 
-
             print(self.base, self.equation, result)
             return result
 
     @property
     def display_base(self):
+        # Displays current base
         return "Base " + str(self.base)
 
     def _convert_to_base(self, number, base_to):
+        # Convert base 10 equation to hex/bin
+
         number = str(number)
         result = ""
         number_int = int(number)
@@ -133,11 +145,18 @@ class Calculator():
                     result_hex += self.b10_to_b16[hex_digit_value]
             return result_hex
         else:
-            print("Invalid input for _convert()")
+            print("Error: Invalid input for _convert()")
 
     def process_button_press(self, button):
+        # React on button press event
 
-        if button in self.valid_bases.keys():
+        # Make sure eval() and _convert_to_base() can handle equation
+        if len(self.equation) > self.max_equation_len:
+            self.equation = []
+            print("Error: Equation too long")
+
+        # Change base
+        elif button in self.valid_bases.keys():
             self.base = self.valid_bases[button]
 
         # Clear equation
@@ -146,8 +165,9 @@ class Calculator():
 
         # Calculate equation
         elif button == "=":
-            self.equation = [eval("".join(self.equation))]
+            self.equation = [str(eval("".join(self.equation)))]
 
+        # Only insert digit if operator buffer is empty. If not, add operator
         elif button in self.valid_digits:
             try:
                 float(self.equation[-1] + button)
@@ -163,68 +183,69 @@ class Calculator():
                 else:
                     self.equation.append(button)
 
+        # Add operator to buffer
         elif button in self.valid_operators:
             self.operator = button
 
 
 # Initialize widgets
+
+# Texts according to button position in grid
 button_texts = {
-    (1, 0): "7",
-    (1, 1): "8",
-    (1, 2): "9",
-    (1, 3): "*",
-    (1, 4): "Base 10",
-    (2, 0): "4",
-    (2, 1): "5",
-    (2, 2): "6",
-    (2, 3): "/",
-    (2, 4): "Base 2",
-    (3, 0): "1",
-    (3, 1): "2",
-    (3, 2): "3",
-    (3, 3): "+",
-    (3, 4): "Base 16",
-    (4, 0): "=",
-    (4, 1): "0",
-    (4, 2): ".",
-    (4, 3): "-",
-    (4, 4): "C"
+    (1, 0): "7", (1, 1): "8",
+    (1, 2): "9",(1, 3): "*",
+    (1, 4): "Base 10", (2, 0): "4",
+    (2, 1): "5", (2, 2): "6",
+    (2, 3): "/", (2, 4): "Base 2",
+    (3, 0): "1", (3, 1): "2",
+    (3, 2): "3", (3, 3): "+",
+    (3, 4): "Base 16", (4, 0): "=",
+    (4, 1): "0", (4, 2): ".",
+    (4, 3): "-", (4, 4): "C"
 }
 
 
+# Amount of rows and columns of widgets
 num_columns = 5
 num_rows = 4
 
+# Initialize calculator
 calculator = Calculator()
 
+# Frames for equation label and base label
 equation_frame = tk.Frame(relief=tk.SUNKEN, borderwidth=2)
 equation_frame.grid(row=0, column=0, columnspan=num_columns-1)
 base_frame = tk.Frame(relief=tk.RAISED, borderwidth=2)
 base_frame.grid(row=0, column=num_columns-1)
 
-equation_field = tk.Label(
+# Initialize equation and base labels and position them in grid
+equation_label = tk.Label(
     master=equation_frame,
     text="",
     width=1,
     fg="black",
     bg="white"
 )
-equation_field.grid(row=0, column=0)
+equation_label.grid(row=0, column=0)
 
-base_field = tk.Label(
+base_label = tk.Label(
     master=base_frame,
     text=calculator.display_base,
     width=6,
     fg="black",
     bg="white"
 )
-base_field.grid(row=0, column=0)
+base_label.grid(row=0, column=0)
 
+# Create columns in grid
 for c in range(num_columns):
+    # Make window resizable
     window.columnconfigure(c, weight=1, minsize=56)
     window.rowconfigure(c, weight=1, minsize=50)
 
+    # Create rows in grid
     for r in range(num_rows):
+        # Create and position button frame
         frame = tk.Frame(
             relief=tk.FLAT,
             borderwidth=3,
@@ -235,6 +256,7 @@ for c in range(num_columns):
             padx=5,
             pady=5
         )
+        # Create button and bind click function
         button = tk.Button(
             master=frame,
             text=button_texts[(r+1, c)],
@@ -246,6 +268,7 @@ for c in range(num_columns):
         button.bind("<Button-1>", on_click_button)
         button.pack()
 
+# Bind resizing function to resizing event
 window.bind("<Configure>", on_resized_window)
 
 # Run window
