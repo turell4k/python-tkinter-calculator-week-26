@@ -150,7 +150,7 @@ class Calculator():
 
         # Calculate equation
         elif button == "=":
-            self.equation = [eval("".join(self.equation))]
+            self.equation = [str(eval("".join(self.equation)))]
 
         elif button in self.valid_digits:
             try:
