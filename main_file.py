@@ -24,6 +24,7 @@ class Calculator():
 
         # Equation processed f.x. "2+2", eval() will process
         self.equation = []
+        self.max_equation_len = 100
 
         # Default is base 10
         self.base = 10
@@ -86,7 +87,6 @@ class Calculator():
                         base_to=self.base
                     )
 
-
             print(self.base, self.equation, result)
             return result
 
@@ -133,11 +133,15 @@ class Calculator():
                     result_hex += self.b10_to_b16[hex_digit_value]
             return result_hex
         else:
-            print("Invalid input for _convert()")
+            print("Error: Invalid input for _convert()")
 
     def process_button_press(self, button):
 
-        if button in self.valid_bases.keys():
+        if len(self.equation) > self.max_equation_len:
+            self.equation = []
+            print("Error: Equation too long")
+
+        elif button in self.valid_bases.keys():
             self.base = self.valid_bases[button]
 
         # Clear equation
@@ -165,7 +169,6 @@ class Calculator():
 
         elif button in self.valid_operators:
             self.operator = button
-
 
 # Initialize widgets
 button_texts = {
